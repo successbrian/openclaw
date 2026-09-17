@@ -24,16 +24,15 @@ All 22 core packages — `agent-core`, `llm-core`, `model-catalog-core`,
 `openclaw-gateway-client`, `openclaw-node-host` (node-sqlite + host bindings).
 
 ### Model providers (extensions/)
-Only what the agents' `openclaw.json` actually references:
+Only what the agents actually use (no Ollama — we're off local models):
 
-- `deepseek` — CEO agent primary (`deepseek-reasoner`)
-- `ollama` — local models (`localqwen`: qwen3.6:35b, qwen2.5:7b)
-- `kilocode` — free-model gateway fallback
+- `deepseek` — primary reasoning model (`deepseek-reasoner`)
+- `kilocode` — free-model gateway (minimax/laguna fallbacks)
 
 ### Plugins / tools (extensions/)
-Only the 5 in `openclaw.json` `plugins.allow`:
+Only the 4 in `openclaw.json` `plugins.allow` that we actually use:
 
-- `searxng`, `duckduckgo`, `deepseek`, `memory-core`, `ollama`
+- `searxng`, `duckduckgo`, `deepseek`, `memory-core`
 
 ### Channels (extensions/)
 - `telegram` — kept (Brian's primary channel), though currently disabled.
