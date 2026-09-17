@@ -127,7 +127,7 @@ suite.define(() => {
       await expect.poll(() => checkout.getAttribute("data-worktree")).toBe("true");
       await checkout.click();
       await expect
-        .poll(() => page.getByRole("textbox", { name: "From", exact: true }).inputValue())
+        .poll(() => page.getByLabel("From", { exact: true }).inputValue())
         .toBe("release/local");
       await expect
         .poll(() => page.getByLabel("Name", { exact: true }).inputValue())
@@ -196,7 +196,7 @@ suite.define(() => {
       await checkout.click();
       const checkoutPopover = page.locator("wa-popover.new-session-page__checkout-popover");
       await expect
-        .poll(() => checkoutPopover.getByRole("textbox", { name: "From" }).inputValue())
+        .poll(() => checkoutPopover.getByLabel("From", { exact: true }).inputValue())
         .toBe("release/next");
       await expect
         .poll(() => checkoutPopover.getByLabel("Name", { exact: true }).inputValue())

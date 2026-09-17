@@ -35,13 +35,65 @@ function handlePopoverHide(event: Event, onHide: () => void) {
   onHide();
 }
 
+function clearActiveBranchSuggestion(field: Element | null) {
+  field?.querySelector("input")?.removeAttribute("aria-activedescendant");
+  for (const suggestion of field?.querySelectorAll("[data-worktree-suggestion]") ?? []) {
+    suggestion.setAttribute("aria-selected", "false");
+  }
+}
+
 function setBranchSuggestionsOpen(target: EventTarget | null, open: boolean) {
   if (!(target instanceof HTMLElement)) {
     return;
   }
   const field = target.closest(".new-session-page__branch-field");
   field?.querySelector("wa-popup")?.toggleAttribute("active", open);
-  field?.querySelector("input")?.setAttribute("aria-expanded", String(open));
+  const input = field?.querySelector("input");
+  input?.setAttribute("aria-expanded", String(open));
+  if (!open) {
+    clearActiveBranchSuggestion(field);
+  }
+}
+
+function moveActiveBranchSuggestion(target: HTMLElement, direction: 1 | -1): boolean {
+  const field = target.closest(".new-session-page__branch-field");
+  const suggestions = [
+    ...(field?.querySelectorAll<HTMLElement>("[data-worktree-suggestion]") ?? []),
+  ];
+  if (!field || suggestions.length === 0) {
+    return false;
+  }
+  const activeIndex = suggestions.findIndex(
+    (suggestion) => suggestion.getAttribute("aria-selected") === "true",
+  );
+  const nextIndex =
+    activeIndex < 0
+      ? direction === 1
+        ? 0
+        : suggestions.length - 1
+      : (activeIndex + direction + suggestions.length) % suggestions.length;
+  for (const [index, suggestion] of suggestions.entries()) {
+    suggestion.setAttribute("aria-selected", String(index === nextIndex));
+  }
+  target.setAttribute("aria-activedescendant", suggestions[nextIndex]!.id);
+  setBranchSuggestionsOpen(target, true);
+  return true;
+}
+
+function acceptActiveBranchSuggestion(
+  target: HTMLElement,
+  onSelect: (branch: string) => void,
+): boolean {
+  const active = target
+    .closest(".new-session-page__branch-field")
+    ?.querySelector<HTMLElement>('[data-worktree-suggestion][aria-selected="true"]');
+  const branch = active?.dataset.worktreeSuggestion;
+  if (!branch) {
+    return false;
+  }
+  onSelect(branch);
+  setBranchSuggestionsOpen(target, false);
+  return true;
 }
 
 export function resolveCheckoutChip(params: {
@@ -89,6 +141,26 @@ function renderWorktreeFields(params: {
     if (!(target instanceof HTMLElement)) {
       return;
     }
+    const isBaseRefInput = target.id === "new-session-worktree-base-ref";
+    if (
+      isBaseRefInput &&
+      (event.key === "ArrowDown" || event.key === "ArrowUp") &&
+      moveActiveBranchSuggestion(target, event.key === "ArrowDown" ? 1 : -1)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    if (
+      isBaseRefInput &&
+      event.key === "Enter" &&
+      !event.isComposing &&
+      acceptActiveBranchSuggestion(target, params.onBaseRefInput)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
@@ -125,7 +197,10 @@ function renderWorktreeFields(params: {
   const baseRefInput = html`<input
     id="new-session-worktree-base-ref"
     type="text"
+    role=${suggestions.length ? "combobox" : nothing}
     aria-label=${t("newSession.worktreeBaseRef")}
+    aria-autocomplete=${suggestions.length ? "list" : nothing}
+    aria-controls=${suggestions.length ? "new-session-worktree-branch-suggestions" : nothing}
     aria-expanded="false"
     ?disabled=${params.submitting || params.pendingPlacement}
     placeholder=${
@@ -137,6 +212,7 @@ function renderWorktreeFields(params: {
     @focus=${(event: FocusEvent) => setBranchSuggestionsOpen(event.currentTarget, true)}
     @input=${(event: Event) => {
       if (event.currentTarget instanceof HTMLInputElement) {
+        clearActiveBranchSuggestion(event.currentTarget.closest(".new-session-page__branch-field"));
         setBranchSuggestionsOpen(event.currentTarget, true);
         params.onBaseRefInput(event.currentTarget.value);
       }
@@ -170,10 +246,17 @@ function renderWorktreeFields(params: {
                 placement="bottom-start"
                 sync="width"
               >
-                <div class="new-session-page__branch-suggestions">
+                <div
+                  id="new-session-worktree-branch-suggestions"
+                  class="new-session-page__branch-suggestions"
+                  role="listbox"
+                >
                   ${suggestions.map(
-                    (branch) => html`<button
+                    (branch, index) => html`<button
+                      id=${`new-session-worktree-branch-suggestion-${index}`}
                       type="button"
+                      role="option"
+                      aria-selected="false"
                       class="session-menu__item"
                       data-worktree-suggestion=${branch.name}
                       tabindex="-1"

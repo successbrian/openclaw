@@ -302,7 +302,7 @@ suite.define(() => {
       await page.getByRole("button", { name: "Use this folder" }).click();
       await expect.poll(() => trigger.getAttribute("data-cloud-profile")).toBe("aws");
       await checkoutTrigger.click();
-      const baseRef = checkout.getByRole("textbox", { name: "From" });
+      const baseRef = checkout.getByLabel("From", { exact: true });
       await expect.poll(() => baseRef.inputValue()).toBe("main");
       await baseRef.fill("release");
       await expect.poll(() => baseRef.inputValue()).toBe("release");

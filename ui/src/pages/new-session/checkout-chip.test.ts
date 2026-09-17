@@ -192,6 +192,15 @@ describe("Checkout chip state", () => {
           "main",
           "release/next",
         ]);
+        baseRef.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+        baseRef.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+        expect(baseRef.getAttribute("aria-activedescendant")).toBe(
+          "new-session-worktree-branch-suggestion-1",
+        );
+        expect(suggestions[1]!.getAttribute("aria-selected")).toBe("true");
+        baseRef.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+        expect(onBaseRefInput).toHaveBeenLastCalledWith("release/next");
+        expect(onConfirm).not.toHaveBeenCalled();
         (suggestions[1] as HTMLButtonElement).click();
         expect(onBaseRefInput).toHaveBeenLastCalledWith("release/next");
         name.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));

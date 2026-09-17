@@ -363,7 +363,7 @@ suite.define(() => {
       const initialBranchRequestCount = (await gateway.getRequests("worktrees.branches")).length;
       await worktreeButton.click();
       await expect
-        .poll(() => placePopover.getByRole("textbox", { name: "From" }).inputValue())
+        .poll(() => placePopover.getByLabel("From", { exact: true }).inputValue())
         .toBe("main");
       await placePopover.getByLabel("Name", { exact: true }).fill("terminal-task");
       await page.locator("#new-session-checkout-trigger").click();

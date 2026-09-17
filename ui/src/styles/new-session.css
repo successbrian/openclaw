@@ -683,6 +683,11 @@ wa-popover.new-session-page__picker-popover
   gap: 2px;
 }
 
+.new-session-page__branch-suggestions [aria-selected="true"] {
+  background: var(--bg-hover);
+  color: var(--text-strong);
+}
+
 /* Context line inside a picker menu, e.g. which repo syncs to a cloud worker. */
 .new-session-page__menu-note {
   padding: 4px 8px 6px;
